@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+	<title>贪吃蛇1.0</title>
+	<style type="text/css">
+		#container{width: 1000px;margin: 0 auto;border: 3px solid #aaa;}
+		#ground{width: 1000px;height: 500px;background-color: #ccc;position: relative;}
+		#control{width: 994px;height: 100px;line-height: 100px;text-indent: 30px;font-weight: bold;}
+		#buttons{float: right;margin-right: 70px;}
+		.block{width: 20px;height: 20px;float: left;}
+		.snakeone{top:60px;background-color: #999;position: absolute;}
+		.food{background-color: #555;position: absolute;}
+	</style>
+</head>
+<body>
+<div id="container">
+	<div id="ground"></div>
+	<div id="control">
+		<span>cobus&nbsp;贪吃蛇(JavaScript)1.0</span>
+		<div id="buttons">
+			<!-- <button id="start">开始</button>
+			<button id="pause">暂停</button> -->
+			<input type="button" id="start" value="开始">
+			<input type="button" id="pause" value="暂停">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	// 1.初始化草场
+	// for(var i=0; i<50*25; i++ ){
+	// 	var oDiv = document.createElement("div"); //创建元素，创建在内存中，需要添加到网页中
+	// 	// oDiv.style.width = 20 + "px";
+	// 	// oDiv.style.height = 20 + "px";
+	// 	// oDiv.style.backgroundColor = "red";
+	// 	// oDiv.style.cssFloat = "left"; //标准浏览器的写法
+	// 	// oDiv.style.styleFloat = "left" //IE写法
+	// 	oDiv.className = "block";
+	// 	oGround.appendChild(oDiv);//向草场中添加小div
+	// }
+	var oGround = document.getElementById('ground');
+	var ROWS = 25, COLS = 50; //创建常量，一般不改变
+	for(var i=0; i<ROWS; i++){
+		for(var j=0; j<COLS; j++){
+			var oDiv = document.createElement('div');
+			oDiv.className = "block"; //样式写在CSS中，在JS中通过类名（className）来调用
+			oGround.appendChild(oDiv); //添加div
+		}
+	}
+	//2.初始化蛇
+	var aSnakeBody = [];//蛇身数组 代表一整条蛇
+	for(var i=0; i<3; i++){
+		var oSnakeone = document.createElement('div');
+		oSnakeone.className = "snakeone block";
+		// oSnakeone.innerHTML = i; //测试代码
+		oSnakeone.style.left = (3-i)*20 + "px"; //JS定义的样式在内联样式中
+		oGround.appendChild(oSnakeone);
+		aSnakeBody.push(oSnakeone); //将oS
+	}
+	//3.初始化食物
+	var oFood;
+	function createFood(){
+		do{	//判断食物是否在ground边界内
+			var bFlag = true; //一个标识 如果值为true代表食物创建成功，如果值为false代表食物创建失败
+			var iLeft = Math.floor(Math.random()*50)*20;
+			var iTop = Math.floor(Math.random()*25)*20;
+			//判断食物和蛇身是否重合
+			for(var i=0; i<aSnakeBody.length; i++){
+				if(aSnakeBody[i].offsetLeft == iLeft && aSnakeBody[i].offsetTop== iTop){//说明重合
+					bFlag = false;
+					break; //跳出循环
+				}
+			}
+		}while(!bFlag);
+		oFood = document.createElement('div');
+		oFood.className = "block food";
+		oFood.style.left = iLeft + "px";
+		oFood.style.top = iTop + "px";
+		oGround.appendChild(oFood);
+	}
+	createFood();
+	//开始游戏
+	var bDown = false;
+	var oStart = document.getElementById('start');
+	oStart.onclick = function(){
+		timer = setInterval(function(){
+			move();
+		},100);
+	};
+	var direction = "right";//初始蛇的移动方向
+	function move(){
+		for(var i=aSnakeBody.length-1; i>=1; i--){
+			aSnakeBody[i].style.top = aSnakeBody[i-1].offsetTop + "px";
+			aSnakeBody[i].style.left = aSnakeBody[i-1].offsetLeft + "px";
+		}
+		var snakeHead = aSnakeBody[0];
+		if(direction == "left" ){
+			snakeHead.style.left = snakeHead.offsetLeft - 20 + "px";
+		}else if(direction == "right"){
+			snakeHead.style.left = snakeHead.offsetLeft + 20 + "px";
+		}else if(direction == "up"){
+			snakeHead.style.top = snakeHead.offsetTop - 20 + "px";
+		}else if(direction == "down"){
+			snakeHead.style.top = snakeHead.offsetTop + 20 + "px";
+		}
+		//蛇吃身体
+		for(var i=4; i<aSnakeBody.length; i++){
+			if(snakeHead.offsetLeft == aSnakeBody[i].offsetLeft && snakeHead.offsetTop == aSnakeBody[i].offsetTop){
+				alert("Game over");
+				clearInterval(timer);
+			}
+		}
+		//吃食物
+		if(snakeHead.offsetTop == oFood.offsetTop && snakeHead.offsetLeft == oFood.offsetLeft){
+			oFood.className = "block snakeone";
+			aSnakeBody.push(oFood);
+			createFood();
+		}
+		//蛇吃墙
+		if(snakeHead.offsetLeft == 1000 || snakeHead.offsetLeft == -20 || snakeHead.offsetTop == 500 || snakeHead.offsetTop == -20){
+			alert("Game over");
+			clearInterval(timer);
+		}
+		bDown = true;
+	}
+	document.onkeydown = function(e){
+		e = e || window.event;
+		var keyCode = e.which || e.keyCode;
+		switch(keyCode){
+			case 37:
+				direction = "left";
+				break;
+			case 38:
+				direction = "up";
+				break;
+			case 39:
+				if(bDown){
+					if(direction != "right"){
+						direction = 'right';
+					}
+				}
+				bDown = false;
+				break;
+				break;
+			case 40:
+				if(bDown){
+					if(direction != "up"){
+						direction = "down";
+					}
+				}
+				bDown = false;
+				break;
+				break;
+		}
+	};
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+	<title>贪吃蛇1.0</title>
+	<style type="text/css">
+		#container{width: 1000px;margin: 0 auto;border: 3px solid #aaa;}
+		#ground{width: 1000px;height: 500px;background-color: #ccc;position: relative;}
+		#control{width: 994px;height: 100px;line-height: 100px;text-indent: 30px;font-weight: bold;}
+		#buttons{float: right;margin-right: 70px;}
+		.block{width: 20px;height: 20px;float: left;}
+		.snakeone{top:60px;background-color: #999;position: absolute;}
+		.food{background-color: #555;position: absolute;}
+	</style>
+</head>
+<body>
+<div id="container">
+	<div id="ground"></div>
+	<div id="control">
+		<span>cobus&nbsp;贪吃蛇(JavaScript)1.0</span>
+		<div id="buttons">
+			<!-- <button id="start">开始</button>
+			<button id="pause">暂停</button> -->
+			<input type="button" id="start" value="开始">
+			<input type="button" id="pause" value="暂停">
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	// 1.初始化草场
+	// for(var i=0; i<50*25; i++ ){
+	// 	var oDiv = document.createElement("div"); //创建元素，创建在内存中，需要添加到网页中
+	// 	// oDiv.style.width = 20 + "px";
+	// 	// oDiv.style.height = 20 + "px";
+	// 	// oDiv.style.backgroundColor = "red";
+	// 	// oDiv.style.cssFloat = "left"; //标准浏览器的写法
+	// 	// oDiv.style.styleFloat = "left" //IE写法
+	// 	oDiv.className = "block";
+	// 	oGround.appendChild(oDiv);//向草场中添加小div
+	// }
+	var oGround = document.getElementById('ground');
+	var ROWS = 25, COLS = 50; //创建常量，一般不改变
+	for(var i=0; i<ROWS; i++){
+		for(var j=0; j<COLS; j++){
+			var oDiv = document.createElement('div');
+			oDiv.className = "block"; //样式写在CSS中，在JS中通过类名（className）来调用
+			oGround.appendChild(oDiv); //添加div
+		}
+	}
+	//2.初始化蛇
+	var aSnakeBody = [];//蛇身数组 代表一整条蛇
+	for(var i=0; i<3; i++){
+		var oSnakeone = document.createElement('div');
+		oSnakeone.className = "snakeone block";
+		// oSnakeone.innerHTML = i; //测试代码
+		oSnakeone.style.left = (3-i)*20 + "px"; //JS定义的样式在内联样式中
+		oGround.appendChild(oSnakeone);
+		aSnakeBody.push(oSnakeone); //将oS
+	}
+	//3.初始化食物
+	var oFood;
+	function createFood(){
+		do{	//判断食物是否在ground边界内
+			var bFlag = true; //一个标识 如果值为true代表食物创建成功，如果值为false代表食物创建失败
+			var iLeft = Math.floor(Math.random()*50)*20;
+			var iTop = Math.floor(Math.random()*25)*20;
+			//判断食物和蛇身是否重合
+			for(var i=0; i<aSnakeBody.length; i++){
+				if(aSnakeBody[i].offsetLeft == iLeft && aSnakeBody[i].offsetTop== iTop){//说明重合
+					bFlag = false;
+					break; //跳出循环
+				}
+			}
+		}while(!bFlag);
+		oFood = document.createElement('div');
+		oFood.className = "block food";
+		oFood.style.left = iLeft + "px";
+		oFood.style.top = iTop + "px";
+		oGround.appendChild(oFood);
+	}
+	createFood();
+	//开始游戏
+	var bDown = false;
+	var oStart = document.getElementById('start');
+	oStart.onclick = function(){
+		timer = setInterval(function(){
+			move();
+		},100);
+	};
+	var direction = "right";//初始蛇的移动方向
+	function move(){
+		for(var i=aSnakeBody.length-1; i>=1; i--){
+			aSnakeBody[i].style.top = aSnakeBody[i-1].offsetTop + "px";
+			aSnakeBody[i].style.left = aSnakeBody[i-1].offsetLeft + "px";
+		}
+		var snakeHead = aSnakeBody[0];
+		if(direction == "left" ){
+			snakeHead.style.left = snakeHead.offsetLeft - 20 + "px";
+		}else if(direction == "right"){
+			snakeHead.style.left = snakeHead.offsetLeft + 20 + "px";
+		}else if(direction == "up"){
+			snakeHead.style.top = snakeHead.offsetTop - 20 + "px";
+		}else if(direction == "down"){
+			snakeHead.style.top = snakeHead.offsetTop + 20 + "px";
+		}
+		//蛇吃身体
+		for(var i=4; i<aSnakeBody.length; i++){
+			if(snakeHead.offsetLeft == aSnakeBody[i].offsetLeft && snakeHead.offsetTop == aSnakeBody[i].offsetTop){
+				alert("Game over");
+				clearInterval(timer);
+			}
+		}
+		//吃食物
+		if(snakeHead.offsetTop == oFood.offsetTop && snakeHead.offsetLeft == oFood.offsetLeft){
+			oFood.className = "block snakeone";
+			aSnakeBody.push(oFood);
+			createFood();
+		}
+		//蛇吃墙
+		if(snakeHead.offsetLeft == 1000 || snakeHead.offsetLeft == -20 || snakeHead.offsetTop == 500 || snakeHead.offsetTop == -20){
+			alert("Game over");
+			clearInterval(timer);
+		}
+		bDown = true;
+	}
+	document.onkeydown = function(e){
+		e = e || window.event;
+		var keyCode = e.which || e.keyCode;
+		switch(keyCode){
+			case 37:
+				direction = "left";
+				break;
+			case 38:
+				direction = "up";
+				break;
+			case 39:
+				if(bDown){
+					if(direction != "right"){
+						direction = 'right';
+					}
+				}
+				bDown = false;
+				break;
+				break;
+			case 40:
+				if(bDown){
+					if(direction != "up"){
+						direction = "down";
+					}
+				}
+				bDown = false;
+				break;
+				break;
+		}
+	};
+</script>
+</body>
+</html>
